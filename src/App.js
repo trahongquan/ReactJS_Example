@@ -1,71 +1,88 @@
-import Button from "@atlaskit/button";
-import Textfield from "@atlaskit/textfield";
-import { useCallback, useEffect, useState } from "react";
-import { v4 } from "uuid";
-import Todolist from "./components/todolist";
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import Profile from './components/profile';
 
+// const Profile = ({ user }) => {
+//   return (
+//     <div>
+//       <h2>Welcome, {user.email}</h2>
+//       <p>User ID: {user._id}</p>
+//     </div>
+//   );
+// };
 
-function App() {
-  // state để lưu biến nội tại // trả về array có 2 đối số
-  const [todolist, setTodoList] = useState([]);
-  const [textInput, setTextInput] = useState("");
-  const TODO_APP_STORAGE_KEY = 'TODO_APP'
+const LoginForm = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [user, setUser] = useState(null);
 
-  useEffect( () => {
-    const storagedTodolist = localStorage.getItem(TODO_APP_STORAGE_KEY)
-    if(storagedTodolist) {
-      setTodoList(JSON.parse(storagedTodolist));
+  useEffect(() => { // load đầu tiên để ktra có accessToken jwt không?
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (accessToken) {
+      axios.get(`http://localhost:3333/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      .then(response => {
+        setUser(response.data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        setErrorMessage('Có lỗi khi tải trang cá nhân!');
+      });
     }
-  }, [])
-
-  useEffect( () => {
-    localStorage.setItem(TODO_APP_STORAGE_KEY, JSON.stringify(todolist));
-  }, [todolist])
-
-  // Tạo ra method handlle onchange
-  // useCallback dùng để loại bỏ việc reload bị xóa mất data
-  const onTextInputChage = useCallback((e) => {
-    setTextInput(e.target.value)
   }, []);
 
-const onAddBtnClick = useCallback((e) => {
-  // Thêm textInput vào danh sách
-  /**
-   * do lấy textInput, todolist ở phía ngoài nên cần thêm vào biến depentency 
-   * để khi funcion được gọi lại khi giá trị thay đổi
-  */
-  setTodoList([
-    {id: v4(), name: textInput, isCompleted: false},
-    ...todolist
-    ])
-  setTextInput("")
-}, [textInput, todolist]);
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-  const onCheckBtnCheck = useCallback( (id) => {
-    setTodoList(prevState => prevState.map(todo => 
-      todo.id === id ? { ...todo, isCompleted: true} : todo
-      // dấu ... dùng để trả về nguyễn cả biến 
-    ))
-  }, [])
+    try {
+      const response = await axios.post('http://localhost:3333/auth/login', { email: username, password });
+
+      if (response.data.accessToken) {
+        localStorage.setItem('accessToken', response.data.accessToken);
+        window.location.reload(); // reload để lấy thông tin người dùng
+      } else {
+        setErrorMessage('Sai tài khoản hoặc mật khẩu');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setErrorMessage('Có lỗi trong quá trình đăng nhập.');
+    }
+  };
 
   return (
-      <>
-        <h3>Danh sách căn làm</h3>
-      <Textfield name="add-todo" placeholder="Thêm việc cần làm..."
-      elemAfterInput={
-          <Button isDisabled={!textInput} // set giá trị bằng textInput
-          appearance="primary" onClick={onAddBtnClick}>
-            Thêm
-          </Button>
-        }
-        css={{padding: "4px"}}
-        value={textInput}
+    <div>
+      {user ? (
+        <Profile user={user} />
+      ) : (
+        <div>
+          <h2>Login Form</h2>
+          <form onSubmit={handleLogin}>
+            <input
+              type="text"
+              value={username}
+              placeholder="Username"
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              value={password}
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button type="submit">Login</button>
+          </form>
+          {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+        </div>
+      )}
+    </div>
+  );
+};
 
-        onChange={onTextInputChage}
-        ></Textfield>
-        <Todolist todolist={todolist} onCheckBtnCheck={onCheckBtnCheck}/>
-      </>
-  )
-}
-
-export default App;
+export default LoginForm;
