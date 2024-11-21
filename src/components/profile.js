@@ -2,6 +2,9 @@ import React from 'react';
 import LogoutButton from './logout';
 
 const Profile = ({ user }) => {
+  if (!user) {
+    return <div>Loading...</div>; 
+  }
   return (
     <div>
       <h2>User Profile</h2>

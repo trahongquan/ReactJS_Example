@@ -1,6 +1,9 @@
 import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useEffect, useState } from 'react';
+import { NavLink, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import Profile from './components/profile';
+import RegistrationForm from './components/register';
 
 // const Profile = ({ user }) => {
 //   return (
@@ -16,6 +19,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [user, setUser] = useState(null);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   useEffect(() => { // load đầu tiên để ktra có accessToken jwt không?
     const accessToken = localStorage.getItem('accessToken');
@@ -55,33 +59,63 @@ const LoginForm = () => {
   };
 
   return (
-    <div>
-      {user ? (
-        <Profile user={user} />
-      ) : (
+    <Router>
+          <div>
+        {user ? (
+          <Profile user={user} />
+        ) : (
+          <div>
+            <h2>Login Form</h2>
+            <form onSubmit={handleLogin} >
+              <div className='d-flex justify-content-between align-content-center flex-column'>
+                <input
+                  type="text"
+                  value={username}
+                  placeholder="Username"
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+                <input
+                  type="password"
+                  value={password}
+                  placeholder="Password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit">Login</button>
+            </form>
+            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+          </div>
+        )}
         <div>
-          <h2>Login Form</h2>
-          <form onSubmit={handleLogin}>
-            <input
-              type="text"
-              value={username}
-              placeholder="Username"
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              value={password}
-              placeholder="Password"
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button type="submit">Login</button>
-          </form>
-          {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-        </div>
-      )}
-    </div>
+              <button onClick={() => setShowRegistrationForm(!showRegistrationForm)}>Đăng ký</button>
+              {showRegistrationForm && <RegistrationForm />}
+            </div>
+      </div>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <NavLink to="/" exact={true}>Home</NavLink>
+            </li>
+            <li>
+              <NavLink to="/about">About</NavLink>
+            </li>
+            <li>
+              <NavLink to="/users">Users</NavLink>
+            </li>
+          </ul>
+        </nav>
+        <Routes>
+          <Route path="/about" element={<RegistrationForm />} />
+
+          <Route path="/users" element={<Profile />} />
+
+          <Route path="/" exact={true} element={<Profile />} />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 
