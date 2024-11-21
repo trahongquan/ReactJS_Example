@@ -1,18 +1,10 @@
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useEffect, useState } from 'react';
-import { NavLink, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+// import { NavLink, Route, BrowserRouter as Router, Routes, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Profile from './components/profile';
 import RegistrationForm from './components/register';
-
-// const Profile = ({ user }) => {
-//   return (
-//     <div>
-//       <h2>Welcome, {user.email}</h2>
-//       <p>User ID: {user._id}</p>
-//     </div>
-//   );
-// };
 
 const LoginForm = () => {
   const [username, setUsername] = useState('');
@@ -20,10 +12,15 @@ const LoginForm = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [user, setUser] = useState(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [showRegistrationButton, setShowRegistrationButton] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => { // load đầu tiên để ktra có accessToken jwt không?
     const accessToken = localStorage.getItem('accessToken');
-
+    const currentPath = window.location.pathname;
+    if (accessToken || currentPath === '/auth/profile') {
+      setShowRegistrationButton(false);
+    }
     if (accessToken) {
       axios.get(`http://localhost:3333/auth/profile`, {
         headers: {
@@ -37,9 +34,10 @@ const LoginForm = () => {
         console.error('Error:', error);
         setErrorMessage('Có lỗi khi tải trang cá nhân!');
       });
+      navigate('/auth/profile')
     }
-  }, []);
-
+  }, [navigate]);
+  
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -49,6 +47,7 @@ const LoginForm = () => {
       if (response.data.accessToken) {
         localStorage.setItem('accessToken', response.data.accessToken);
         window.location.reload(); // reload để lấy thông tin người dùng
+        setShowRegistrationButton(false);
       } else {
         setErrorMessage('Sai tài khoản hoặc mật khẩu');
       }
@@ -56,11 +55,12 @@ const LoginForm = () => {
       console.error('Error:', error);
       setErrorMessage('Có lỗi trong quá trình đăng nhập.');
     }
+
   };
 
   return (
-    <Router>
-          <div>
+    <>
+      <div>
         {user ? (
           <Profile user={user} />
         ) : (
@@ -89,11 +89,15 @@ const LoginForm = () => {
           </div>
         )}
         <div>
-              <button onClick={() => setShowRegistrationForm(!showRegistrationForm)}>Đăng ký</button>
-              {showRegistrationForm && <RegistrationForm />}
-            </div>
+          <div>
+            {showRegistrationButton
+              && (<button onClick={() => setShowRegistrationForm(!showRegistrationForm)}>Đăng ký 2</button>)
+            }
+            {showRegistrationForm && <RegistrationForm/>}
+          </div>
+        </div>
       </div>
-      <div>
+      {/* <div>
         <nav>
           <ul>
             <li>
@@ -114,8 +118,8 @@ const LoginForm = () => {
 
           <Route path="/" exact={true} element={<Profile />} />
         </Routes>
-      </div>
-    </Router>
+      </div> */}
+    </>
   );
 };
 

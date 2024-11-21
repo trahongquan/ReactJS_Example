@@ -1,12 +1,14 @@
 import axios from 'axios';
 import React, { useState } from 'react';
 
+
 const RegistrationForm = () => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    
+    // const navigate = useNavigate();
+
     const handleRegistration = async () => {
         try {
             // const response = await fetch('http://localhost:3333/register', {
@@ -21,7 +23,8 @@ const RegistrationForm = () => {
             if (response.data.accessToken) {
                 localStorage.setItem('accessToken', response.data.accessToken);
                 console.log('accessToken = ' + response.data.accessToken);
-                
+                // navigate('/auth/login');
+                window.location.reload()
             } else {
                 setError('Đăng ký tài khoản không thành công');
             }
@@ -45,4 +48,4 @@ const RegistrationForm = () => {
     );
 };
 
-export default RegistrationForm;
+export default RegistrationForm; // dùng để sau này có thể push vào history
